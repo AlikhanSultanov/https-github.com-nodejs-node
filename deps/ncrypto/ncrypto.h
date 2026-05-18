@@ -70,6 +70,18 @@
 #define OPENSSL_WITH_KMAC 0
 #endif
 
+#if !defined(OPENSSL_IS_BORINGSSL) && OPENSSL_VERSION_PREREQ(3, 0)
+#define OPENSSL_WITH_AES_SIV 1
+#else
+#define OPENSSL_WITH_AES_SIV 0
+#endif
+
+#if !defined(OPENSSL_IS_BORINGSSL) && OPENSSL_VERSION_PREREQ(3, 2)
+#define OPENSSL_WITH_AES_GCM_SIV 1
+#else
+#define OPENSSL_WITH_AES_GCM_SIV 0
+#endif
+
 #if defined(OPENSSL_IS_BORINGSSL) || OPENSSL_VERSION_PREREQ(3, 2)
 #define OPENSSL_WITH_SIGNATURE_CONTEXT_STRING 1
 #else
@@ -402,6 +414,7 @@ class Cipher final {
   Cipher(const Cipher&) = default;
   Cipher& operator=(const Cipher&) = default;
   inline Cipher& operator=(const EVP_CIPHER* cipher) {
+    fetched_cipher_.reset();
     cipher_ = cipher;
     return *this;
   }
@@ -424,6 +437,8 @@ class Cipher final {
   bool isCtrMode() const;
   bool isCcmMode() const;
   bool isOcbMode() const;
+  bool isSivMode() const;
+  bool isGcmSivMode() const;
   bool isStreamMode() const;
   bool isChaCha20Poly1305() const;
 
@@ -493,7 +508,10 @@ class Cipher final {
   }
 
  private:
+  explicit Cipher(EVP_CIPHER* cipher);
+
   const EVP_CIPHER* cipher_ = nullptr;
+  std::shared_ptr<EVP_CIPHER> fetched_cipher_;
 };
 
 // ============================================================================
@@ -833,6 +851,8 @@ class CipherCtxPointer final {
   bool isOcbMode() const;
   bool isCcmMode() const;
   bool isWrapMode() const;
+  bool isSivMode() const;
+  bool isGcmSivMode() const;
   bool isChaCha20Poly1305() const;
 
   bool update(const Buffer<const unsigned char>& in,
