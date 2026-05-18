@@ -4338,18 +4338,19 @@ struct CipherCallbackContext {
   void operator()(const char* name) { cb(name); }
 };
 
-#if OPENSSL_WITH_AES_SIV || OPENSSL_WITH_AES_GCM_SIV
-constexpr const char* kProviderOnlyCiphers[] = {
 #if OPENSSL_WITH_AES_SIV
+constexpr const char* kProviderOnlyAesSivCiphers[] = {
     "aes-128-siv",
     "aes-192-siv",
     "aes-256-siv",
+};
 #endif
+
 #if OPENSSL_WITH_AES_GCM_SIV
+constexpr const char* kProviderOnlyAesGcmSivCiphers[] = {
     "aes-128-gcm-siv",
     "aes-192-gcm-siv",
     "aes-256-gcm-siv",
-#endif
 };
 #endif
 
@@ -4420,11 +4421,21 @@ void Cipher::ForEach(Cipher::CipherNameCallback callback) {
 #endif
       &context);
 #if OPENSSL_WITH_AES_SIV || OPENSSL_WITH_AES_GCM_SIV
-  for (const char* name : kProviderOnlyCiphers) {
+  auto maybe_push_provider_only_cipher = [&](const char* name) {
     EVP_CIPHER* cipher = EVP_CIPHER_fetch(nullptr, name, nullptr);
-    if (cipher == nullptr) continue;
+    if (cipher == nullptr) return;
     EVP_CIPHER_free(cipher);
     context.cb(name);
+  };
+#endif
+#if OPENSSL_WITH_AES_SIV
+  for (const char* name : kProviderOnlyAesSivCiphers) {
+    maybe_push_provider_only_cipher(name);
+  }
+#endif
+#if OPENSSL_WITH_AES_GCM_SIV
+  for (const char* name : kProviderOnlyAesGcmSivCiphers) {
+    maybe_push_provider_only_cipher(name);
   }
 #endif
 #endif
