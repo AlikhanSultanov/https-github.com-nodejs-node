@@ -3165,11 +3165,9 @@ bool SSLCtxPointer::setCipherSuites(const char* ciphers) {
 
 // ============================================================================
 
-#if OPENSSL_VERSION_MAJOR >= 3
+#if OPENSSL_WITH_AES_SIV || OPENSSL_WITH_AES_GCM_SIV
 Cipher::Cipher(EVP_CIPHER* cipher)
     : cipher_(cipher), fetched_cipher_(cipher, EVP_CIPHER_free) {}
-#else
-Cipher::Cipher(EVP_CIPHER* cipher) : cipher_(cipher) {}
 #endif
 
 const Cipher Cipher::FromName(const char* name) {
@@ -3202,7 +3200,7 @@ const Cipher Cipher::FromNid(int nid) {
   const EVP_CIPHER* cipher = EVP_get_cipherbynid(nid);
   if (cipher != nullptr) return Cipher(cipher);
 
-#if OPENSSL_VERSION_MAJOR >= 3
+#if OPENSSL_WITH_AES_SIV || OPENSSL_WITH_AES_GCM_SIV
   const char* name = OBJ_nid2sn(nid);
   if (name != nullptr) return FromName(name);
 #endif
@@ -3360,7 +3358,7 @@ const char* Cipher::getName() const {
     const char* name = OBJ_nid2sn(nid);
     if (name != nullptr) return name;
   }
-#if OPENSSL_VERSION_MAJOR >= 3
+#if OPENSSL_WITH_AES_SIV || OPENSSL_WITH_AES_GCM_SIV
   return EVP_CIPHER_get0_name(cipher_);
 #else
   return {};
