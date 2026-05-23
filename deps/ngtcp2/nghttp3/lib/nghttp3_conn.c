@@ -2789,6 +2789,12 @@ static int conn_submit_headers_data(nghttp3_conn *conn, nghttp3_stream *stream,
     .nvlen = nvlen,
   };
 
+  rv = nghttp3_stream_frq_add(stream, &fr);
+  if (rv != 0) {
+    nghttp3_nva_del(nnva, conn->mem);
+    return rv;
+  }
+
   if (dr && dr->read_data != wt_session_read_data) {
     fr.data = (nghttp3_frame_data){
       .type = NGHTTP3_FRAME_DATA,
@@ -2801,11 +2807,6 @@ static int conn_submit_headers_data(nghttp3_conn *conn, nghttp3_stream *stream,
     }
   }
 
-  rv = nghttp3_stream_frq_add(stream, &fr);
-  if (rv != 0) {
-    nghttp3_nva_del(nnva, conn->mem);
-    return rv;
-  }
 
 
   if (nghttp3_stream_require_schedule(stream)) {
