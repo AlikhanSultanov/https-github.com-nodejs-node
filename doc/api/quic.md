@@ -1051,6 +1051,16 @@ added: v23.8.0
 The endpoint that created this session. Returns `null` if the session
 has been destroyed. Read only.
 
+### `session.onappliation`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+* Type: {quic.OnApplicationCallback}
+
+The callback to invoke when new application options, e.g. HTTP/3 settings arrived.
+
 ### `session.onerror`
 
 <!-- YAML
@@ -3510,11 +3520,11 @@ with that error:
 
 * Stream callbacks (`onblocked`, `onreset`, `onheaders`, `ontrailers`,
   `oninfo`, `onwanttrailers`): the stream is destroyed.
-* Session callbacks (`onstream`, `ondatagram`, `ondatagramstatus`,
-  `onpathvalidation`, `onsessionticket`, `onnewtoken`,
-  `onversionnegotiation`, `onorigin`, `ongoaway`, `onhandshake`,
-  `onkeylog`, `onqlog`): the session is destroyed along with all of its
-  streams.
+* Session callbacks (`onapplication`, `onstream`, `ondatagram`,
+  `ondatagramstatus`, `onpathvalidation`, `onsessionticket`,
+  `onnewtoken`, `onversionnegotiation`, `onorigin`, `ongoaway`, 
+  `onhandshake`, `onkeylog`, `onqlog`): the session is destroyed along
+  with all of its streams.
 
 Before destruction, the optional [`session.onerror`][] or
 [`stream.onerror`][] callback is invoked (if set), giving the application a
@@ -4042,6 +4052,18 @@ added: v23.8.0
 
 Published when an endpoint's busy state changes.
 
+### Channel: `quic.session.application`
+
+<!-- YAML
+added: v23.8.0
+-->
+
+* `applicationoptions` {quic.ApplicationOptions} Current application options.
+* `session` {quic.QuicSession}
+
+Published when a locally-initiated stream is opened.
+
+
 ### Channel: `quic.session.created.client`
 
 <!-- YAML
@@ -4425,6 +4447,7 @@ throughput issues caused by flow control.
 [`session.createUnidirectionalStream()`]: #sessioncreateunidirectionalstreamoptions
 [`session.destroy()`]: #sessiondestroyerror-options
 [`session.maxPendingDatagrams`]: #sessionmaxpendingdatagrams
+[`session.onapplication`]: #sessiononapplication
 [`session.ondatagram`]: #sessionondatagram
 [`session.ondatagramstatus`]: #sessionondatagramstatus
 [`session.onearlyrejected`]: #sessiononearlyrejected

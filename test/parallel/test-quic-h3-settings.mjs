@@ -170,6 +170,10 @@ const decoder = new TextDecoder();
     verifyPeer: 'manual',
     application: { enableConnectProtocol: true, enableDatagrams: true },
   });
+  clientSession.onapplication = mustCall((appopt) => {
+    strictEqual(appopt.enableConnectProtocol, true);
+    strictEqual(appopt.enableDatagrams, true);
+  });
   await clientSession.opened;
 
   const stream = await clientSession.createBidirectionalStream({
