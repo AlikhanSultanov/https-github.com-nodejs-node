@@ -3417,7 +3417,7 @@ int nghttp3_conn_open_wt_data_stream(nghttp3_conn *conn, int64_t session_id,
                                      void *stream_user_data) {
   nghttp3_stream *stream, *wt_ctrl_stream;
   nghttp3_wt_session *wt_session;
-  nghttp3_frame *fr;
+  nghttp3_frame fr;
   int64_t type;
   int rv;
   int remote_bidi = 0;
@@ -3525,7 +3525,7 @@ int nghttp3_conn_open_wt_data_stream(nghttp3_conn *conn, int64_t session_id,
     stream->rstate.state = NGHTTP3_REQ_STREAM_STATE_BEFORE_WT_DATA;
   }
 
-  fr->wt = (nghttp3_frame_ex_wt){
+  fr.wt = (nghttp3_frame_ex_wt){
     .type = NGHTTP3_FRAME_EX_WT,
     .fr.wt_stream =
       {
