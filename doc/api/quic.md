@@ -1253,8 +1253,8 @@ added: v23.8.0
   * `body` {string | ArrayBuffer | SharedArrayBuffer | ArrayBufferView |
     Blob | FileHandle | AsyncIterable | Iterable | Promise | null}
     The outbound body source. See [`stream.setBody()`][] for details on
-    supported types. When omitted, the stream starts half-closed (writable
-    side open, no body queued).
+    supported types. When omitted, the stream starts half-open (writable
+    side open, no body queued; no FIN is sent immediately).
   * `headers` {Object} Initial request or response headers to send. Only
     used when the session supports headers (e.g. HTTP/3). If `body` is not
     specified and `headers` is provided, the stream is treated as
@@ -1281,7 +1281,8 @@ added: v23.8.0
 * Returns: {Promise} for a {quic.QuicStream}
 
 Open a new bidirectional stream. If the `body` option is not specified,
-the outgoing stream will be half-closed. The `priority` and `incremental`
+the outgoing stream will be half-open (writable side open, no FIN sent).
+The `priority` and `incremental`
 options are only used when the session supports priority (e.g. HTTP/3).
 The `headers`, `onheaders`, `ontrailers`, `oninfo`, and `onwanttrailers`
 options are only used when the session supports headers (e.g. HTTP/3).
@@ -1296,7 +1297,8 @@ added: v23.8.0
   * `body` {string | ArrayBuffer | SharedArrayBuffer | ArrayBufferView |
     Blob | FileHandle | AsyncIterable | Iterable | Promise | null}
     The outbound body source. See [`stream.setBody()`][] for details on
-    supported types. When omitted, the stream is closed immediately.
+    supported types. When omitted, the stream starts half-open (writable
+    side open, no body queued; no FIN is sent immediately).
   * `headers` {Object} Initial request headers to send.
   * `priority` {string} The priority level of the stream. One of `'high'`,
     `'default'`, or `'low'`. **Default:** `'default'`.
@@ -1318,7 +1320,8 @@ added: v23.8.0
 * Returns: {Promise} for a {quic.QuicStream}
 
 Open a new unidirectional stream. If the `body` option is not specified,
-the outgoing stream will be closed. The `priority` and `incremental`
+the outgoing stream will be half-open (writable side open, no FIN sent).
+The `priority` and `incremental`
 options are only used when the session supports priority (e.g. HTTP/3).
 
 ### `session.path`
