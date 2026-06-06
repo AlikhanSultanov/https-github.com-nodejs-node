@@ -51,7 +51,7 @@ typedef enum nghttp3_wt_ctrl_stream_state {
 typedef struct nghttp3_wt_ctrl_read_state {
   nghttp3_varint_read_state rvint;
   nghttp3_exfr_cpsl cpsl;
-  int64_t left;
+  uint64_t left;
   size_t field_left;
   int state;
 } nghttp3_wt_ctrl_read_state;

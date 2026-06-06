@@ -143,9 +143,8 @@ int nghttp3_wt_session_read_stream(nghttp3_wt_session *wts, const uint8_t *src,
 
       switch (rstate->cpsl.hd.type) {
       case NGHTTP3_EXFR_CPSL_WT_CLOSE_SESSION:
-        if (rstate->left < (int64_t)sizeof(uint32_t) ||
-            rstate->left >
-              (int64_t)sizeof(uint32_t) + /* largest message size */ 1024) {
+        if (rstate->left < sizeof(uint32_t) ||
+            rstate->left > sizeof(uint32_t) + /* largest message size */ 1024) {
           /* TODO Find better error code */
           return NGHTTP3_ERR_H3_MESSAGE_ERROR;
         }
@@ -168,15 +167,14 @@ int nghttp3_wt_session_read_stream(nghttp3_wt_session *wts, const uint8_t *src,
 
       break;
     case NGHTTP3_WT_CTRL_STREAM_STATE_WT_CLOSE_SESSION_ERROR_CODE:
-      len = (size_t)nghttp3_min_int64((int64_t)rstate->field_left,
-                                      (int64_t)(end - p));
+      len = nghttp3_min(rstate->field_left, (size_t)(end - p));
 
       for (i = 0; i < len; ++i) {
         cpsl->wt_close_session.error_code <<= 8;
         cpsl->wt_close_session.error_code += *p++;
       }
 
-      rstate->left -= (int64_t)len;
+      rstate->left -= len;
       rstate->field_left -= len;
       if (rstate->field_left) {
         break;
@@ -194,9 +192,9 @@ int nghttp3_wt_session_read_stream(nghttp3_wt_session *wts, const uint8_t *src,
 
       break;
     case NGHTTP3_WT_CTRL_STREAM_STATE_WT_CLOSE_SESSION_ERROR_MSG:
-      len = (size_t)nghttp3_min_int64(rstate->left, (int64_t)(end - p));
+      len = (size_t)nghttp3_min(rstate->left, (uint64_t)(end - p));
 
-      rstate->left -= (int64_t)len;
+      rstate->left -= len;
       if (rstate->left) {
         break;
       }
@@ -205,9 +203,9 @@ int nghttp3_wt_session_read_stream(nghttp3_wt_session *wts, const uint8_t *src,
 
       return NGHTTP3_ERR_WT_SESSION_GONE;
     case NGHTTP3_WT_CTRL_STREAM_STATE_IGN:
-      len = (size_t)nghttp3_min_int64(rstate->left, (int64_t)(end - p));
+      len = (size_t)nghttp3_min(rstate->left, (uint64_t)(end - p));
       p += len;
-      rstate->left -= (int64_t)len;
+      rstate->left -= len;
 
       if (rstate->left) {
         return 0;
