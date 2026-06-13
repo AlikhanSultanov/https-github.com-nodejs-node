@@ -709,8 +709,6 @@ exports. A cache entry is created in the CommonJS cache to avoid duplication.
 The same object is returned in CommonJS if the JSON module has already been
 imported from the same path.
 
-<i id="esm_experimental_text_modules"></i>
-
 ## Text modules
 
 > Stability: 1.0 - Early development
