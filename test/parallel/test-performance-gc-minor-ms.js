@@ -7,6 +7,7 @@
 
 const common = require('../common');
 const assert = require('assert');
+const { gcUntil } = require('../common/gc');
 const {
   PerformanceObserver,
   constants
@@ -17,6 +18,7 @@ const {
   NODE_PERFORMANCE_GC_FLAGS_FORCED
 } = constants;
 
+let observed = false;
 const obs = new PerformanceObserver(common.mustCallAtLeast((list) => {
   const entry = list.getEntries()[0];
   assert(entry);
@@ -24,10 +26,9 @@ const obs = new PerformanceObserver(common.mustCallAtLeast((list) => {
   assert.strictEqual(entry.entryType, 'gc');
   assert.strictEqual(entry.detail.kind, NODE_PERFORMANCE_GC_MINOR_MARK_SWEEP);
   assert.strictEqual(entry.detail.flags, NODE_PERFORMANCE_GC_FLAGS_FORCED);
+  observed = true;
   obs.disconnect();
 }));
 obs.observe({ entryTypes: ['gc'] });
 
-globalThis.gc({ type: 'minor' });
-// Keep the event loop alive to witness the GC async callback happen.
-setImmediate(() => setImmediate(() => 0));
+gcUntil('minor gc event', () => observed, 10, { type: 'minor' });
