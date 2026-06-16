@@ -162,6 +162,7 @@ jobs:
         name: Build and test Node.js
         with:
           cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          pkcs11-store-provider-test: 'true'
           extra-nix-flags: |
             --arg useSeparateDerivationForV8 true \
             ${{ endsWith(matrix.system, '-darwin') && '--arg withAmaro false --arg withLief false --arg withSQLite false --arg withFFI false --arg extraConfigFlags ''["--without-inspector" "--without-node-options"]'' \' || '\' }}
@@ -211,7 +212,7 @@ jobs:
 
       - name: Build V8 to cache it
         if: ${{ steps.v8-drv.outputs.ALREADY_CACHED != 'true' }}
-        run: nix-store --export "$(nix-build "$V8_DRV")" > libv8-aarch64-linux.nar
+        run: nix-store --export "$(nix-build --fallback "$V8_DRV")" > libv8-aarch64-linux.nar
         env:
           V8_DRV: ${{ steps.v8-drv.outputs.V8_DRV }}
 
@@ -229,9 +230,31 @@ jobs:
           echo "matrix=$(
             nix-instantiate --eval --strict --json -E "
               let
-                matrix = import $TAR_DIR/tools/nix/openssl-matrix.nix {};
+                pkgs = import $TAR_DIR/tools/nix/pkgs.nix {
+                  config.permittedInsecurePackages = [ \"openssl-1.1.1w\" ];
+                };
+                matrix = import $TAR_DIR/tools/nix/openssl-matrix.nix {
+                  inherit pkgs;
+                };
               in
-              builtins.map (attr: { inherit attr; inherit (builtins.getAttr attr matrix) name; }) (builtins.attrNames matrix)
+              builtins.map (attr:
+                let
+                  openssl = builtins.getAttr attr matrix;
+                in
+                {
+                  inherit attr;
+                  inherit (openssl) name;
+                  # The real pkcs11 STORE test needs pkcs11-provider and
+                  # SoftHSM built against the same OpenSSL as Node. The pinned
+                  # SoftHSM package currently builds against OpenSSL 3.x but
+                  # not OpenSSL 4.x, so keep this to the known-working range and
+                  # revisit when https://github.com/softhsm/SoftHSMv2/issues/868
+                  # is fixed and the pinned nixpkgs provider stack supports 4.x.
+                  pkcs11StoreProviderTest =
+                    openssl.pname == \"openssl\" &&
+                    pkgs.lib.versionAtLeast openssl.version \"3\" &&
+                    pkgs.lib.versionOlder openssl.version \"4\";
+                }) (builtins.attrNames matrix)
             "
           )" >> "$GITHUB_OUTPUT"
 
@@ -267,6 +290,7 @@ jobs:
         name: Build and test Node.js
         with:
           cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          pkcs11-store-provider-test: ${{ matrix.openssl.pkcs11StoreProviderTest }}
           # Override just the `openssl` attr of the default shared-lib set with
           # the matrix-selected nixpkgs attribute (e.g. `openssl_3_6`). All
           # other shared libs (brotli, cares, libuv, …) keep their defaults.
