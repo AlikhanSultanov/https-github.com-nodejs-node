@@ -523,8 +523,12 @@ Start a server listening for connections on a given `handle` that has
 already been bound to a port, a Unix domain socket, or a Windows named pipe.
 
 The `handle` object can be either a server, a socket (anything with an
-underlying `_handle` member), or an object with an `fd` member that is a
-valid file descriptor.
+underlying `_handle` member), a [`BoundHandle`][], or an object with an `fd`
+member that is a valid file descriptor.
+
+When `handle` is a [`BoundHandle`][], the server adopts the already-bound
+socket and starts listening on it. Adoption consumes the bound handle (see
+[ownership transfer][`BoundHandle`]).
 
 Listening on a file descriptor is not supported on Windows.
 
@@ -769,6 +773,12 @@ changes:
     access to specific IP addresses, IP ranges, or IP subnets.
   * `fd` {number} If specified, wrap around an existing socket with
     the given file descriptor, otherwise a new socket will be created.
+  * `handle` {net.BoundHandle} If specified, wrap around the bound socket from a
+    [`BoundHandle`][]. A subsequent
+    [`socket.connect()`][`socket.connect()`] uses the bound handle as the
+    connection's source binding (honoring the bound local address and port).
+    Adoption consumes the bound handle (see
+    [ownership transfer][`BoundHandle`]).
   * `keepAlive` {boolean} If set to `true`, it enables keep-alive functionality on
     the socket immediately after the connection is established, similarly on what
     is done in [`socket.setKeepAlive()`][]. **Default:** `false`.
@@ -1627,6 +1637,88 @@ This property represents the state of the connection as a string.
 * If the stream is readable and not writable, it is `readOnly`.
 * If the stream is not readable and writable, it is `writeOnly`.
 
+## Class: `net.BoundHandle`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+A role-neutral wrapper over a synchronously bound TCP socket, mirroring POSIX
+`bind(2)`, which is role-agnostic until `listen()` or `connect()`. It is adopted
+by exactly one server (via [`server.listen()`][]) or socket (via the `handle`
+option of [`new net.Socket()`][`new net.Socket(options)`]). Adoption transfers
+ownership of the socket; afterwards `address()` and `close()` throw
+[`ERR_SOCKET_HANDLE_ADOPTED`][]. A handle that is never adopted must be closed
+to avoid leaking the socket.
+
+```mjs
+import net from 'node:net';
+
+const bound = new net.BoundHandle({ host: '127.0.0.1', port: 0 });
+const { port } = bound.address();
+
+const server = net.createServer();
+server.listen(bound); // Adopt as a server, or pass to new net.Socket() instead.
+```
+
+### `new net.BoundHandle([options])`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+* `options` {Object}
+  * `host` {string} Local address to bind. Must be a numeric IP literal; no DNS
+    resolution is performed. **Default:** `'0.0.0.0'`, or `'::'` when
+    `ipv6Only` is `true`.
+  * `port` {number} Local port. `0` requests an OS-assigned ephemeral port.
+    **Default:** `0`.
+  * `ipv6Only` {boolean} Sets `IPV6_V6ONLY`, disabling dual-stack support so the
+    socket binds IPv6 only. Only meaningful for IPv6 binds. **Default:**
+    `false`.
+  * `reusePort` {boolean} Sets `SO_REUSEPORT`, allowing multiple sockets to bind
+    the same address and port for kernel-level load balancing. Support is
+    platform-dependent. **Default:** `false`.
+
+Synchronously binds a TCP socket. Because `bind(2)` is a local, non-blocking
+system call, the bind happens inline and errors (such as `EADDRINUSE`,
+`EADDRNOTAVAIL`, `EACCES`, or `EINVAL`) are thrown synchronously. The
+kernel-assigned address, including the ephemeral port chosen when `port` is `0`,
+is available immediately via
+[`boundHandle.address()`][`net.BoundHandle.address()`].
+
+This is the synchronous, role-neutral counterpart to the bind performed
+internally by [`server.listen()`][] and [`socket.connect()`][], analogous to
+[`dgram` `socket.bindSync()`][].
+
+### `boundHandle.address()`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+* Returns: {Object} An object with `address`, `family`, and `port` properties,
+  as [`server.address()`][] returns.
+
+Returns the bound local address. When bound with `port: 0`, `port` is the
+OS-assigned ephemeral port.
+
+### `boundHandle.close()`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+Releases the bound socket. Only needed when the handle is never adopted.
+
+### `boundHandle[Symbol.dispose]()`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+Closes the handle if it has not been adopted or closed; otherwise a no-op.
+
 ## `net.connect()`
 
 Aliases to
@@ -2097,10 +2189,14 @@ net.isIPv6('fhqwhgads'); // returns false
 [`'error'`]: #event-error_1
 [`'listening'`]: #event-listening
 [`'timeout'`]: #event-timeout
+[`BoundHandle`]: #class-netboundhandle
+[`ERR_SOCKET_HANDLE_ADOPTED`]: errors.md#err_socket_handle_adopted
 [`EventEmitter`]: events.md#class-eventemitter
 [`child_process.fork()`]: child_process.md#child_processforkmodulepath-args-options
+[`dgram` `socket.bindSync()`]: dgram.md#socketbindsyncoptions
 [`dns.lookup()`]: dns.md#dnslookuphostname-options-callback
 [`dns.lookup()` hints]: dns.md#supported-getaddrinfo-flags
+[`net.BoundHandle.address()`]: #boundhandleaddress
 [`net.Server`]: #class-netserver
 [`net.Socket`]: #class-netsocket
 [`net.connect()`]: #netconnect
@@ -2116,6 +2212,7 @@ net.isIPv6('fhqwhgads'); // returns false
 [`net.getDefaultAutoSelectFamilyAttemptTimeout()`]: #netgetdefaultautoselectfamilyattempttimeout
 [`new net.Socket(options)`]: #new-netsocketoptions
 [`readable.setEncoding()`]: stream.md#readablesetencodingencoding
+[`server.address()`]: #serveraddress
 [`server.close()`]: #serverclosecallback
 [`server.dropMaxConnection`]: #serverdropmaxconnection
 [`server.listen()`]: #serverlisten
