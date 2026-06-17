@@ -14,6 +14,13 @@ const net = require('net');
   assert.strictEqual(typeof addr.port, 'number');
   assert.ok(addr.port > 0);
 
+  // fd() exposes the underlying descriptor (a real fd on POSIX, -1 on Windows).
+  const fd = bound.fd();
+  assert.strictEqual(typeof fd, 'number');
+  if (!common.isWindows) {
+    assert.ok(fd >= 0);
+  }
+
   bound.close();
 }
 
@@ -103,8 +110,9 @@ if (!common.isWindows && process.getuid() !== 0) {
   server.listen(bound, common.mustCall(() => {
     assert.strictEqual(server.address().port, port);
 
-    // The bound handle has been adopted: address()/close() now throw.
+    // The bound handle has been adopted: address()/fd()/close() now throw.
     assert.throws(() => bound.address(), { code: 'ERR_SOCKET_HANDLE_ADOPTED' });
+    assert.throws(() => bound.fd(), { code: 'ERR_SOCKET_HANDLE_ADOPTED' });
     assert.throws(() => bound.close(), { code: 'ERR_SOCKET_HANDLE_ADOPTED' });
 
     const client = net.connect({ host: '127.0.0.1', port }, () => {

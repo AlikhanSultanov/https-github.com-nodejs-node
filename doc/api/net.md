@@ -1703,6 +1703,21 @@ added: REPLACEME
 Returns the bound local address. When bound with `port: 0`, `port` is the
 OS-assigned ephemeral port.
 
+### `boundHandle.fd()`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+* Returns: {integer} The underlying OS file descriptor, or `-1` on platforms
+  that do not expose one for sockets (such as Windows).
+
+Returns the file descriptor of the bound socket. Ownership remains with the
+`BoundHandle`, so the descriptor must not be closed by the caller. The
+descriptor is only available before the handle is adopted; afterwards it belongs
+to the adopting [`net.Server`][] or [`net.Socket`][] and `fd()` throws
+[`ERR_SOCKET_HANDLE_ADOPTED`][].
+
 ### `boundHandle.close()`
 
 <!-- YAML
