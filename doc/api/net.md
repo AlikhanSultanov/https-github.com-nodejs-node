@@ -554,6 +554,10 @@ changes:
   * `backlog` {number} Common parameter of [`server.listen()`][]
     functions.
   * `exclusive` {boolean} **Default:** `false`
+  * `handle` {net.BoundHandle} A pre-bound [`BoundHandle`][]. The server adopts
+    the already-bound socket and listens on it, ignoring `host`, `port`, and
+    `path`. Adoption consumes the bound handle (see
+    [ownership transfer][`BoundHandle`]).
   * `host` {string}
   * `ipv6Only` {boolean} For TCP servers, setting `ipv6Only` to `true` will
     disable dual-stack support, i.e., binding to host `::` won't make
@@ -577,7 +581,8 @@ changes:
   functions.
 * Returns: {net.Server}
 
-If `port` is specified, it behaves the same as
+If `handle` is specified, the server adopts that pre-bound socket. Otherwise, if
+`port` is specified, it behaves the same as
 [`server.listen([port[, host[, backlog]]][, callback])`][`server.listen(port)`].
 Otherwise, if `path` is specified, it behaves the same as
 [`server.listen(path[, backlog][, callback])`][`server.listen(path)`].
@@ -1819,6 +1824,9 @@ and [`socket.connect(options[, connectListener])`][`socket.connect(options)`].
 
 Additional options:
 
+* `handle` {net.BoundHandle} A pre-bound [`BoundHandle`][] used as the
+  connection's source binding, honoring its local address and port. Adoption
+  consumes the bound handle (see [ownership transfer][`BoundHandle`]).
 * `timeout` {number} If set, will be used to call
   [`socket.setTimeout(timeout)`][] after the socket is created, but before
   it starts the connection.
@@ -2199,10 +2207,8 @@ net.isIPv6('fhqwhgads'); // returns false
 [`ERR_SOCKET_HANDLE_ADOPTED`]: errors.md#err_socket_handle_adopted
 [`EventEmitter`]: events.md#class-eventemitter
 [`child_process.fork()`]: child_process.md#child_processforkmodulepath-args-options
-[`dgram` `socket.bindSync()`]: dgram.md#socketbindsyncoptions
 [`dns.lookup()`]: dns.md#dnslookuphostname-options-callback
 [`dns.lookup()` hints]: dns.md#supported-getaddrinfo-flags
-[`net.BoundHandle.address()`]: #boundhandleaddress
 [`net.Server`]: #class-netserver
 [`net.Socket`]: #class-netsocket
 [`net.connect()`]: #netconnect

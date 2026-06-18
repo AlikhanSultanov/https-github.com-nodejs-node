@@ -34,6 +34,16 @@ const net = require('net');
   bound.close();
 }
 
+// No arguments reserves an OS-assigned ephemeral port on the IPv4 wildcard.
+{
+  const bound = new net.BoundHandle();
+  const addr = bound.address();
+  assert.strictEqual(addr.address, '0.0.0.0');
+  assert.strictEqual(addr.family, 'IPv4');
+  assert.ok(addr.port > 0);
+  bound.close();
+}
+
 // Binding to a port held by a live listener throws EADDRINUSE synchronously.
 // libuv defers this error from uv_tcp_bind(), so the constructor forces a
 // getsockname() to surface it eagerly. (Two role-neutral, not-yet-listening
