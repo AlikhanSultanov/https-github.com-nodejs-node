@@ -1643,19 +1643,21 @@ This property represents the state of the connection as a string.
 added: REPLACEME
 -->
 
-A role-neutral wrapper over a synchronously bound TCP socket, mirroring POSIX
-`bind(2)`, which is role-agnostic until `listen()` or `connect()`. It is adopted
-by exactly one server (via [`server.listen()`][]) or socket (via the `handle`
-option of [`new net.Socket()`][`new net.Socket(options)`]). Adoption transfers
-ownership of the socket; afterwards `address()` and `close()` throw
-[`ERR_SOCKET_HANDLE_ADOPTED`][]. A handle that is never adopted must be closed
-to avoid leaking the socket.
+Allows for the synchronous creation of a pre-bound socket, that can be passed
+to `listen()` or `new net.Socket()` later on. For `listen()` this enables
+synchronous port reservation, while for `new net.Socket()`, it allows control
+over the local egress port/IP, via `bind(2)` semantics.
+
+Adoption transfers ownership of the socket; afterwards `address()` and `close()`
+throw [`ERR_SOCKET_HANDLE_ADOPTED`][]. A handle that is never adopted must be
+closed to avoid leaking the socket.
 
 ```mjs
 import net from 'node:net';
 
-const bound = new net.BoundHandle({ host: '127.0.0.1', port: 0 });
+const bound = new net.BoundHandle();
 const { port } = bound.address();
+console.log(`Reserved port ${port} for server`);
 
 const server = net.createServer();
 server.listen(bound); // Adopt as a server, or pass to new net.Socket() instead.
@@ -1679,17 +1681,6 @@ added: REPLACEME
   * `reusePort` {boolean} Sets `SO_REUSEPORT`, allowing multiple sockets to bind
     the same address and port for kernel-level load balancing. Support is
     platform-dependent. **Default:** `false`.
-
-Synchronously binds a TCP socket. Because `bind(2)` is a local, non-blocking
-system call, the bind happens inline and errors (such as `EADDRINUSE`,
-`EADDRNOTAVAIL`, `EACCES`, or `EINVAL`) are thrown synchronously. The
-kernel-assigned address, including the ephemeral port chosen when `port` is `0`,
-is available immediately via
-[`boundHandle.address()`][`net.BoundHandle.address()`].
-
-This is the synchronous, role-neutral counterpart to the bind performed
-internally by [`server.listen()`][] and [`socket.connect()`][], analogous to
-[`dgram` `socket.bindSync()`][].
 
 ### `boundHandle.address()`
 
