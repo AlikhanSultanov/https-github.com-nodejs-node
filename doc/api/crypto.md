@@ -3772,7 +3772,7 @@ and description of each available elliptic curve.
 added: v0.1.92
 changes:
   - version: REPLACEME
-    pr-url: https://github.com/nodejs/node/pull/REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/64000
     description: The `outputLength` option is now required for XOF
                  hash functions without default output lengths.
   - version: v12.8.0
@@ -4895,7 +4895,7 @@ added:
  - v20.12.0
 changes:
   - version: REPLACEME
-    pr-url: https://github.com/nodejs/node/pull/REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/64000
     description: The `outputLength` option is now required for XOF
                  hash functions without default output lengths.
   - version:

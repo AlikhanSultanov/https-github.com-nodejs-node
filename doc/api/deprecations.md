@@ -4352,7 +4352,7 @@ npx codemod@latest @nodejs/types-is-native-error
 <!-- YAML
 changes:
   - version: REPLACEME
-    pr-url: https://github.com/nodejs/node/pull/REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/64000
     description: End-of-Life.
   - version: v25.0.0
     pr-url: https://github.com/nodejs/node/pull/59008
