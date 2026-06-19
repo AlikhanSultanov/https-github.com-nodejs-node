@@ -155,7 +155,7 @@ for (const algo of crypto.getHashes()) {
   try {
     crypto.createHash(algo);
   } catch (err) {
-    assert.strictEqual(err.code, 'ERR_OSSL_EVP_NOT_XOF_OR_INVALID_LENGTH');
+    if (err?.code !== 'ERR_OSSL_EVP_NOT_XOF_OR_INVALID_LENGTH') throw err;
     crypto.createHash(algo, { outputLength: 0 });
   }
 }
