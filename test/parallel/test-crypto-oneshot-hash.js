@@ -16,7 +16,7 @@ function getXofOptions(method) {
   try {
     crypto.createHash(method);
   } catch (err) {
-    assert.strictEqual(err.code, invalidXofLengthCode);
+    if (err?.code !== invalidXofLengthCode) throw err;
     return { outputLength: 16 };
   }
 }
