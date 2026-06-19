@@ -126,7 +126,7 @@ strings, `Buffer`, typed array, `DataView`, and `ArrayBuffer` values are
 converted on the JavaScript side before calling the optimized native wrapper.
 
 Optimized Fast FFI calls support at most 8 function arguments. Functions with
-more than 7 arguments use the generic FFI call path instead.
+more than 8 arguments use the generic FFI call path instead.
 
 ## Signature objects
 
